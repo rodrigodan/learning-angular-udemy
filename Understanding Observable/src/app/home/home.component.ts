@@ -34,7 +34,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
 
 
-    this.firstObsSubscription =     customIntervalObservable.pipe(filter((data:number)=>{
+    this.firstObsSubscription = customIntervalObservable.pipe(filter((data:number)=>{
       return data>0;
     }), map((data:number)=>{
       return 'roud' + (data + 1);
