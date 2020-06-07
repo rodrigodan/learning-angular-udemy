@@ -17,16 +17,25 @@ export class AppComponent implements OnInit, OnDestroy {
   private errorSub: Subscription;
 
   constructor(private http: HttpClient, private postService: PostService) {}
- 
 
   ngOnInit() {
+
+    const teste = {
+      element1:{
+        id: 'dado1',
+        e: 'dado2'
+      }
+    }
+    console.log(teste);
+    console.log();
+    console.log({...teste['element1'], e2: 'dado3'});
 
     this.errorSub = this.postService.error.subscribe(errorMessage=>{
       this.error = errorMessage;
     })
 
     this.isFetching = true;
-
+    
     this.postService.fetchPost()
     .subscribe(post => {
       this.isFetching = false;
