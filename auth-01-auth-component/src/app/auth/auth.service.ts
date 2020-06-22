@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { catchError } from 'rxjs/operators';
-import { throwError } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
+import { throwError, Subject } from 'rxjs';
+import { User } from './user.model';
 
 
 export interface AuthResponseData{
     kind: string;
     idToken: string;
+    email: string;
     refreshToken: string;
     expiresIn: string;
     localId: string;
@@ -15,6 +17,9 @@ export interface AuthResponseData{
 
 @Injectable({ providedIn: 'root' })
 export class AuthService{
+
+    user = new Subject<User>();
+
     constructor(private http: HttpClient){}
     signUp(email: string, password: string, ){
         return this.http.post<AuthResponseData>(
@@ -24,7 +29,11 @@ export class AuthService{
                 password: password,
                 returnSecureToken: true
             }
-        ).pipe(catchError(this.handleError));
+        ).pipe(catchError(this.handleError),
+            tap(resData => {
+                this.handleAuthentication(resData.email, resData.localId, resData.idToken, +resData.expiresIn)
+            })
+        );
     }
     login(email: string, password: string){
         return this.http.post<AuthResponseData>(
@@ -34,7 +43,22 @@ export class AuthService{
                 password: password,
                 returnSecureToken: true
             }
-        ).pipe(catchError(this.handleError));
+        ).pipe(catchError(this.handleError), 
+        tap(resData => {
+            this.handleAuthentication(resData.email, resData.localId, resData.idToken, +resData.expiresIn)
+        }));
+    }
+
+    private handleAuthentication(email: string, userId: string, token: string, expiresIn: number){
+            const exprirationDate = new Date(new Date().getTime() + expiresIn*1000);
+            const user = new User(
+                email, 
+                userId, 
+                token, 
+                exprirationDate
+            );
+            this.user.next(user);
+
     }
 
     private handleError(errorRes: HttpErrorResponse){
